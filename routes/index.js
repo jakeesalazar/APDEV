@@ -1,45 +1,18 @@
-const express = require('express');
-const path = require('path');
-const exphbs = require('express-handlebars');
-const handlebars = require('handlebars');
-const bodyParser = require('body-parser');
 
-const app = express();
-const port = 3000;
-const hostname = 'localhost';
+console.log("index 1");
+const router = require('express').Router();
+console.log("index 2");
+const userController = require('../controllers/userController');
+console.log("index 3");
+const { registerValidation, loginValidation } = require('../validators.js');
+console.log("index 4");
+const { isPublic, isPrivate } = require('../middlewares/checkAuth');
 
-// additional connection options
-const options = { useUnifiedTopology: true };
+//const postModel = require('./models/post');
 
-// Creating Collection [Featured]
-const userModel = require('./models/user');
-const postModel = require('./models/post');
+console.log("index main");
 
-
-var userArray = [
-  {
-    email: 'Jacob_salazar@dlsu.edu.ph',
-    username: 'Jacob_salazar',
-    password: 'dlsu1234'
-  },
-  {
-    email: 'jazzmine_ilagan@yahoo.com',
-    username: 'jazzmine07',
-    password: 'dlsu1234'
-  },
-  {
-    email: 'Enrico_Cuison@gmail.com',
-    username: 'Enrico_cuison',
-    password:  'dlsu1234'
-  },
-  {
-    email: 'admin@dlsu.edu.ph',
-    username: 'admin',
-    password: 'admin'
-  }
-]
-
-
+// Posts
 var postArray = [
 	{
 	  img: 'img/taal_volcano.jpg',
@@ -60,7 +33,7 @@ var postArray = [
 	  tags: "#australiabushfire #bushfire #fire #SaveAustralia"
   }, 
   {
-	  img: "img/famine.jpg",
+	  img: "img/elderly.jpg",
 	  header:  "Home for the Aged",
 	  caption: "According to the World Food Programme (WFP), because of the years of drought, widespread flooding and economic disarray, 45 million people are facing severe food shortages, with women and children bearing the brunt of the crisis. Half of the population of Zimbabwe or 7.7 million people are facing its worst hunger emergency in a decade. Let us help the people who are starving, let us share our blessings to them. Donate now.",
 	  tags: "#famine #Africa #HelpAfrica"
@@ -77,129 +50,109 @@ var postArray = [
 	  caption: "According to the World Food Programme (WFP), because of the years of drought, widespread flooding and economic disarray, 45 million people are facing severe food shortages, with women and children bearing the brunt of the crisis. Half of the population of Zimbabwe or 7.7 million people are facing its worst hunger emergency in a decade. Let us help the people who are starving, let us share our blessings to them. Donate now.",
 	  tags: "#famine #Africa #HelpAfrica", 
   }
-  // TO DO insert remaing post -- limit featured post to 6
 ];
 
-// Insert postArray to DB
-
-  userModel.collection.insertMany(userArray, function(err, res){
-    if(err) throw err;
-    console.log("Insert Users Successful!");
-  });
-
-
-function add(){
-  for (i=0;i<postArray.length;i++){
-    if (i<=2){
-    const id_owner = userModel.collection.find({ "username": "Jacob_salazar" });
-    const post = new postModel({
-      img: postArray[i].img,
-      header: postArray[i].header,
-      caption: postArray[i].caption,
-      tags: postArray[i].tags,
-      owner: id_owner._id 
-    });
-  post.save(function (err, result) {
-    if (err) throw err;
-    console.log(result);
-  });
-    }else if (i>2 && i<=5){
-      const id_owner = userModel.collection.find({ "username": "Enrico_cuison" });
-    const post = new postModel({
-      img: postArray[i].img,
-      header: postArray[i].header,
-      caption: postArray[i].caption,
-      tags: postArray[i].tags,
-      owner: id_owner._id 
-    });
-  post.save(function (err, result) {
-    if (err) throw err;
-    console.log(result);
-  });      
-    }else{
-    const id_owner = userModel.collection.find({ "username": "jazzmine07" });
-    const post = new postModel({
-      img: postArray[i].img,
-      header: postArray[i].header,
-      caption: postArray[i].caption,
-      tags: postArray[i].tags,
-      owner: id_owner._id 
-    });
-  post.save(function (err, result) {
-    if (err) throw err;
-    console.log(result);
-  });
-    }
-  }
-}
-
-add();
+console.log("index.js");
 
 
 
+/*
+// Inserting to DB
+userModel.collection.insertMany(userArray, function(err, res){
+  if(err) throw err;
+  console.log("Insert Users Successful!");
 
-app.engine('hbs', exphbs({
-    extname: 'hbs', 
-    defaultView: 'main',
-    layoutsDir: path.join(__dirname, '/views/layouts'), 
-    partialsDir: path.join(__dirname, '/views/partials'),
-}));
-
-app.set('view engine', 'hbs');
-
-// Configuration for handling API endpoint data
-app.use(bodyParser.json()); // support json encoded bodies
-app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-
-// Home
-app.get('/', function(req, res) {
+  for (i =0 ; i<postArray.length;i ++){
+  // assigns different post for different users... posts are distributed to the predefined users
+    if(i<3)
+      var owner_id = res.insertedIds[0];
+    else if (i>=3 && i<5)
+      var owner_id = res.insertedIds[1];
+    else
+      var owner_id = res.insertedIds[2];
   
-    postModel.collection.find({}).toArray(function(err, result) {
-      if(err) throw err;
-      console.log("Read Successful!");
-
-      res.render('home', {
-        item: result,
-      });
+    const post = new postModel({
+      img: postArray[i].img,
+      header: postArray[i].header,
+      caption: postArray[i].caption,
+      tags: postArray[i].tags,
+      owner: owner_id
     });
+
+    post.save(function (err, result) {
+      if (err) throw err;
+      console.log(result);
+    });      
+  }
+});
+*/
+
+// Get homepage
+router.get('/', isPublic, (req, res) => {
+  console.log("Read home successful!");
+  res.render('home');
+  console.log("render home");
 });
 
+/*
 // View All Post
 app.get('/feed', function(req, res) { 
- 
-    postModel.collection.find({}).toArray(function(err, result) {
-      if(err) throw err;
-      console.log("Read Successful!");
+  postModel.collection.find({}).toArray(function(err, result) {
+    if(err) throw err;
+    console.log("Read View All Post Successful!");
 
-      res.render('feed', {
-        item: result,
-      });
+    res.render('feed', {
+      item: result,
     });
   });
-
-
-
-app.get('/PostList', function(req, res) {
-    res.status(200).send(postArray);
 });
 
-// Login
-app.get('/login', function(req, res) {
-  res.render('login');
+// Search A Post
+app.post('/searchPost', function(req, res) {
+  var search = req.body.title;
+  console.log(search);
+
+  postModel.find({ header: { $regex: search, $options:'i' } }, function(err, post) {
+    if(err) throw err;
+    console.log(post);  // checker,del after
+    
+    res.render('feed', {
+      item: post,
+    });
+  });
+});
+*/
+
+// Get login page
+router.get('/login', isPublic, (req, res) => {
+  console.log("Read login successful!");
+  res.render('login', {
+    pageTitle: 'Login',
+  });
+  console.log("login");
 });
 
-// Profile Page (Logged in)
-app.get('/myprofile', function(req, res) {
-  res.render('myprofile');
+// Logout
+router.get('/logout', isPrivate, userController.logoutUser);
+
+// Get register page
+router.get('/register', isPublic, (req, res) => {
+  console.log("Read register successful!");
+  res.render('register', {
+    pageTitle: 'Register',
+  });
+  console.log("register");
 });
 
-// Profile Page (Logged in)
-app.get('/donate', function(req, res) {
-  res.render('donate');
+// Get myprofile page
+router.get('/myprofile', isPrivate, (req, res) => {
+  console.log("Read myprofile successful!");
+  res.render('myprofile', { username: req.session.username } );
+  console.log("myprofile");
 });
 
-app.use(express.static('public'));
+// POST methods for form submissions
+router.post('/register', isPublic, registerValidation, userController.registerUser);
+router.post('/login', isPublic, loginValidation, userController.loginUser);
 
-app.listen(port, function() { 
-    console.log(`Server running at http://${hostname}:${port}/`); 
-});
+module.exports = router;
